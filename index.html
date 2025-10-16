@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 Reaction Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.8;
+            margin-bottom: 30px;
+        }
+
+        .game-wrapper {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .game-area {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 500px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .lights-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #0a0a0a;
+            border-radius: 15px;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
+            overflow-x: auto;
+        }
+
+        .light-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .light {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #1a1a1a;
+            border: 3px solid #333;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+            transition: all 0.2s;
+        }
+
+        .light.on {
+            background: #ff0000;
+            border-color: #ff0000;
+            box-shadow: 0 0 30px #ff0000, 0 0 60px #ff0000, inset 0 0 10px #ff0000;
+        }
+
+        .light.green {
+            background: #00ff00;
+            border-color: #00ff00;
+            box-shadow: 0 0 30px #00ff00, 0 0 60px #00ff00, inset 0 0 10px #00ff00;
+        }
+
+        .click-area {
+            width: 100%;
+            padding: 40px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 3px solid rgba(255,255,255,0.1);
+            user-select: none;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .click-area:hover {
+            background: rgba(255,255,255,0.1);
+            transform: scale(1.02);
+        }
+
+        .click-area:active {
+            transform: scale(0.98);
+        }
+
+        .click-area.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .stats {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            flex: 1;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .instructions {
+            margin-top: 20px;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .result-message {
+            font-size: 1.3em;
+            margin-top: 20px;
+            min-height: 30px;
+            font-weight: bold;
+        }
+
+        .leaderboard {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .subtitle {
+                font-size: 1em;
+            }
+
+            .game-area {
+                padding: 20px 15px;
+            }
+
+            .lights-container {
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .light {
+                width: 30px;
+                height: 30px;
+            }
+
+            .light-column {
+                gap: 8px;
+            }
+
+            .click-area {
+                padding: 30px 20px;
+                font-size: 1.2em;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .stat-box {
+                padding: 15px;
+            }
+
+            .stat-value {
+                font-size: 1.5em;
+            }
+
+            .instructions {
+                font-size: 0.95em;
+            }
+
+            .result-message {
+                font-size: 1.1em;
+            }
+
+            .status-text {
+                font-size: 1em;
+            }
+
+            .leaderboard {
+                padding: 20px 15px;
+            }
+
+            .leaderboard h2 {
+                font-size: 1.5em;
+            }
+
+            .leaderboard-item {
+                padding: 12px;
+                font-size: 0.9em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .lights-container {
+                gap: 8px;
+                padding: 12px;
+            }
+
+            .light {
+                width: 25px;
+                height: 25px;
+                border: 2px solid #333;
+            }
+
+            .light-column {
+                gap: 6px;
+            }
+
+            .click-area {
+                padding: 25px 15px;
+                font-size: 1em;
+            }
+        }
+
+        .leaderboard h2 {
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .leaderboard-list {
+            list-style: none;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: white;
+            animation: slideIn 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .leaderboard-item.gold {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            font-size: 1.1em;
+        }
+
+        .leaderboard-item.silver {
+            background: linear-gradient(135deg, #C0C0C0 0%, #808080 100%);
+        }
+
+        .leaderboard-item.bronze {
+            background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%);
+        }
+
+        .rank {
+            font-weight: bold;
+            font-size: 1.2em;
+            min-width: 30px;
+        }
+
+        .time {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .clear-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 0.9em;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+
+        .clear-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .empty-leaderboard {
+            color: #999;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        .status-text {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏎️ F1 Reaction Race 🏎️</h1>
+        <div class="subtitle">React when all lights go out!</div>
+        
+        <div class="game-wrapper">
+            <div class="game-area">
+                <div class="lights-container" id="lightsContainer">
+                    <div class="light-column">
+                        <div class="light"></div>
+                        <div class="light"></div>
+                        <div class="light"></div>
+                    </div>
+                    <div class="light-column">
+                        <div class="light"></div>
+                        <div class="light"></div>
+                        <div class="light"></div>
+                    </div>
+                    <div class="light-column">
+                        <div class="light"></div>
+                        <div class="light"></div>
+                        <div class="light"></div>
+                    </div>
+                    <div class="light-column">
+                        <div class="light"></div>
+                        <div class="light"></div>
+                        <div class="light"></div>
+                    </div>
+                    <div class="light-column">
+                        <div class="light"></div>
+                        <div class="light"></div>
+                        <div class="light"></div>
+                    </div>
+                </div>
+
+                <div class="click-area" id="clickArea">
+                    CLICK TO START
+                </div>
+
+                <div class="status-text" id="statusText"></div>
+                <div class="result-message" id="resultMessage"></div>
+                
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Best Time</div>
+                        <div class="stat-value" id="bestTime">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Last Time</div>
+                        <div class="stat-value" id="lastTime">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Attempts</div>
+                        <div class="stat-value" id="attempts">0</div>
+                    </div>
+                </div>
+
+                <div class="instructions">
+                    Watch the lights turn on one by one, then react instantly when they all go out!
+                </div>
+            </div>
+
+            <div class="leaderboard">
+                <h2>🏆 Top 10 Times</h2>
+                <ul class="leaderboard-list" id="leaderboardList">
+                    <li class="empty-leaderboard">No times recorded yet. Start racing!</li>
+                </ul>
+                <button class="clear-btn" id="clearBtn">Clear Leaderboard</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const lightsContainer = document.getElementById('lightsContainer');
+        const clickArea = document.getElementById('clickArea');
+        const statusText = document.getElementById('statusText');
+        const resultMessage = document.getElementById('resultMessage');
+        const bestTimeEl = document.getElementById('bestTime');
+        const lastTimeEl = document.getElementById('lastTime');
+        const attemptsEl = document.getElementById('attempts');
+        const leaderboardList = document.getElementById('leaderboardList');
+        const clearBtn = document.getElementById('clearBtn');
+
+        const lights = document.querySelectorAll('.light');
+        let state = 'idle';
+        let startTime = 0;
+        let bestTime = null;
+        let attempts = 0;
+        let leaderboard = [];
+        let currentColumn = 0;
+
+        function loadLeaderboard() {
+            leaderboard = [];
+        }
+
+        function updateLeaderboard(time) {
+            leaderboard.push(time);
+            leaderboard.sort((a, b) => a - b);
+            leaderboard = leaderboard.slice(0, 10);
+            displayLeaderboard();
+        }
+
+        function displayLeaderboard() {
+            if (leaderboard.length === 0) {
+                leaderboardList.innerHTML = '<li class="empty-leaderboard">No times recorded yet. Start racing!</li>';
+                return;
+            }
+
+            leaderboardList.innerHTML = '';
+            leaderboard.forEach((time, index) => {
+                const li = document.createElement('li');
+                li.className = 'leaderboard-item';
+                
+                if (index === 0) li.classList.add('gold');
+                else if (index === 1) li.classList.add('silver');
+                else if (index === 2) li.classList.add('bronze');
+
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                
+                li.innerHTML = `
+                    <span class="rank">${medal} #${index + 1}</span>
+                    <span class="time">${time}ms</span>
+                `;
+                leaderboardList.appendChild(li);
+            });
+        }
+
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear the leaderboard?')) {
+                leaderboard = [];
+                displayLeaderboard();
+            }
+        });
+
+        clickArea.addEventListener('click', handleClick);
+
+        function handleClick() {
+            if (state === 'idle') {
+                startGame();
+            } else if (state === 'running') {
+                jumpStart();
+            } else if (state === 'ready') {
+                recordTime();
+            }
+        }
+
+        function resetLights() {
+            lights.forEach(light => {
+                light.classList.remove('on', 'green');
+            });
+        }
+
+        async function startGame() {
+            state = 'running';
+            resetLights();
+            clickArea.classList.add('disabled');
+            clickArea.textContent = 'WAIT FOR LIGHTS...';
+            statusText.textContent = '';
+            resultMessage.textContent = '';
+            currentColumn = 0;
+
+            // Turn on lights column by column (like F1)
+            for (let col = 0; col < 5; col++) {
+                await sleep(600 + Math.random() * 200);
+                if (state !== 'running') return;
+                
+                for (let row = 0; row < 3; row++) {
+                    lights[col * 3 + row].classList.add('on');
+                }
+                currentColumn++;
+            }
+
+            // Random delay before lights go out (1-3 seconds)
+            const delay = Math.random() * 2000 + 1000;
+            await sleep(delay);
+            
+            if (state !== 'running') return;
+
+            // All lights go out!
+            resetLights();
+            state = 'ready';
+            clickArea.classList.remove('disabled');
+            clickArea.textContent = 'GO GO GO!';
+            clickArea.style.background = 'rgba(0, 255, 0, 0.2)';
+            startTime = Date.now();
+        }
+
+        function jumpStart() {
+            state = 'idle';
+            resetLights();
+            clickArea.classList.remove('disabled');
+            clickArea.textContent = 'JUMP START!';
+            clickArea.style.background = 'rgba(255, 0, 0, 0.2)';
+            statusText.textContent = '';
+            resultMessage.textContent = '🚫 FALSE START! You clicked too early. Try again!';
+            attempts++;
+            attemptsEl.textContent = attempts;
+            
+            setTimeout(() => {
+                clickArea.textContent = 'CLICK TO START';
+                clickArea.style.background = 'rgba(255,255,255,0.05)';
+            }, 2000);
+        }
+
+        function recordTime() {
+            const reactionTime = Date.now() - startTime;
+            state = 'idle';
+            
+            clickArea.classList.remove('disabled');
+            clickArea.textContent = 'CLICK TO RACE AGAIN';
+            clickArea.style.background = 'rgba(255,255,255,0.05)';
+            
+            lastTimeEl.textContent = reactionTime + 'ms';
+            attempts++;
+            attemptsEl.textContent = attempts;
+
+            updateLeaderboard(reactionTime);
+
+            if (bestTime === null || reactionTime < bestTime) {
+                bestTime = reactionTime;
+                bestTimeEl.textContent = reactionTime + 'ms';
+                resultMessage.textContent = `🏆 ${reactionTime}ms - NEW PERSONAL BEST!`;
+                statusText.textContent = '🎉 INCREDIBLE!';
+            } else {
+                let rating = '';
+                if (reactionTime < 150) rating = '🔥 SUPERHUMAN!';
+                else if (reactionTime < 200) rating = '⚡ F1 DRIVER LEVEL!';
+                else if (reactionTime < 250) rating = '🏎️ AMAZING REFLEXES!';
+                else if (reactionTime < 300) rating = '👍 GREAT START!';
+                else if (reactionTime < 400) rating = '😊 GOOD REACTION!';
+                else rating = '🐌 KEEP PRACTICING!';
+                
+                statusText.textContent = rating;
+                resultMessage.textContent = `Your time: ${reactionTime}ms`;
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        loadLeaderboard();
+        displayLeaderboard();
+    </script>
+</body>
+</html>
