@@ -1,13 +1,24 @@
+# Node modules
+node_modules/
+*/node_modules/
+package-lock.json
+*/package-lock.json
+
+# Build artifacts
+dist/
+*/dist/
+build/
+*/build/
+.cache/
+*/.cache/
+
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-build/
 develop-eggs/
-dist/
-downloads/
 eggs/
 .eggs/
 lib/
@@ -20,8 +31,16 @@ wheels/
 .installed.cfg
 *.egg
 
+# Hardhat
+contracts/cache/
+contracts/artifacts/
+contracts/typechain-types/
+
 # Environment
 .env
+*/.env
+.env.local
+.env.*.local
 .venv
 env/
 venv/
@@ -39,3 +58,8 @@ venv.bak/
 # OS
 .DS_Store
 Thumbs.db
+*.log
+
+# Replit
+.config/
+.upm/

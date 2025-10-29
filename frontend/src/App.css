@@ -1,0 +1,377 @@
+/* Header */
+.header {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--text-white);
+}
+
+.header-wallet {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Wallet Connect */
+.wallet-connect {
+  min-width: 250px;
+}
+
+.connect-btn {
+  background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+  border: none;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.connect-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.connect-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.connected-wallet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wallet-info {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-size: 0.9rem;
+}
+
+.wallet-label {
+  color: var(--text-gray);
+  font-size: 0.85rem;
+}
+
+.wallet-address {
+  color: var(--accent-color);
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.switch-chain-btn {
+  background: #ff6b35;
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.switch-chain-btn:hover {
+  background: #ff8555;
+}
+
+.disconnect-btn {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.disconnect-btn:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Main Container */
+.container {
+  flex: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  width: 100%;
+}
+
+.game-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Hero Section */
+.hero {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: var(--text-gray);
+}
+
+.blockchain-status {
+  margin-top: 1rem;
+  color: #00ff88;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* F1 Lights */
+.lights-container {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.light-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.light {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(100, 100, 100, 0.3);
+  border: 3px solid rgba(150, 150, 150, 0.5);
+  transition: all 0.3s ease;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.light.on {
+  background: radial-gradient(circle, #ff0000 0%, #cc0000 100%);
+  border-color: #ff0000;
+  box-shadow: 
+    0 0 20px #ff0000,
+    0 0 40px #ff0000,
+    inset 0 0 10px rgba(255, 255, 255, 0.5);
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+/* Click Area */
+.click-area {
+  width: 100%;
+  padding: 3rem 2rem;
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.click-area:hover:not(:disabled):not(.disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.02);
+}
+
+.click-area.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.click-area.ready {
+  background: rgba(0, 255, 0, 0.2);
+  border-color: #00ff00;
+  animation: glow 0.5s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 255, 0, 0.8);
+  }
+}
+
+/* Status Messages */
+.status-text {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  min-height: 2.5rem;
+}
+
+.result-message {
+  text-align: center;
+  font-size: 1.2rem;
+  color: var(--text-gray);
+  margin-bottom: 2rem;
+  min-height: 1.8rem;
+}
+
+.confirming-text {
+  text-align: center;
+  color: #ffa500;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Statistics */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-box {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+  border-radius: 15px;
+  text-align: center;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.stat-box:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.stat-label {
+  color: var(--text-gray);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--accent-color);
+}
+
+/* Instructions */
+.instructions {
+  text-align: center;
+  color: var(--text-gray);
+  font-size: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  line-height: 1.6;
+}
+
+/* Footer */
+.footer {
+  background: rgba(255, 255, 255, 0.05);
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-gray);
+}
+
+.footer p {
+  margin-bottom: 0.5rem;
+}
+
+.tech-stack {
+  font-size: 0.9rem;
+  color: var(--accent-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .lights-container {
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  .light {
+    width: 35px;
+    height: 35px;
+  }
+
+  .click-area {
+    font-size: 1.5rem;
+    padding: 2rem 1rem;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .wallet-connect {
+    width: 100%;
+  }
+}

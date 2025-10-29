@@ -1,0 +1,130 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  contract-tests:
+    name: Smart Contract Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: contracts/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./contracts
+      run: npm install
+    
+    - name: Compile contracts
+      working-directory: ./contracts
+      run: npm run compile
+    
+    - name: Run tests
+      working-directory: ./contracts
+      run: npm test
+    
+    - name: Gas report
+      working-directory: ./contracts
+      run: REPORT_GAS=true npm test
+      continue-on-error: true
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm install
+    
+    - name: Lint
+      working-directory: ./frontend
+      run: npm run lint
+      continue-on-error: true
+    
+    - name: Build
+      working-directory: ./frontend
+      run: npm run build
+      env:
+        VITE_SCORE_REGISTRY_ADDRESS: ${{ secrets.VITE_SCORE_REGISTRY_ADDRESS }}
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: frontend-dist
+        path: frontend/dist
+
+  deploy-testnet:
+    name: Deploy to Base Sepolia
+    runs-on: ubuntu-latest
+    needs: [contract-tests, frontend-build]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+    
+    - name: Install dependencies
+      working-directory: ./contracts
+      run: npm install
+    
+    - name: Deploy to Base Sepolia
+      working-directory: ./contracts
+      run: npm run deploy:sepolia
+      env:
+        DEPLOYER_PRIVATE_KEY: ${{ secrets.TESTNET_DEPLOYER_PRIVATE_KEY }}
+        BASESCAN_API_KEY: ${{ secrets.BASESCAN_API_KEY }}
+
+  # deploy-mainnet:
+  #   name: Deploy to Base Mainnet
+  #   runs-on: ubuntu-latest
+  #   needs: [contract-tests, frontend-build]
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  #   
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   
+  #   - name: Setup Node.js
+  #     uses: actions/setup-node@v3
+  #     with:
+  #       node-version: '20'
+  #   
+  #   - name: Install dependencies
+  #     working-directory: ./contracts
+  #     run: npm ci
+  #   
+  #   - name: Deploy to Base Mainnet
+  #     working-directory: ./contracts
+  #     run: npm run deploy:mainnet
+  #     env:
+  #       DEPLOYER_PRIVATE_KEY: ${{ secrets.MAINNET_DEPLOYER_PRIVATE_KEY }}
+  #       BASESCAN_API_KEY: ${{ secrets.BASESCAN_API_KEY }}
+  #
+  #   - name: Verify Contract
+  #     working-directory: ./contracts
+  #     run: npm run verify
+  #     env:
+  #       BASESCAN_API_KEY: ${{ secrets.BASESCAN_API_KEY }}
