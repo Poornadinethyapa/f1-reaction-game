@@ -1,0 +1,477 @@
+1 — The ready-to-paste AI prompt
+
+Use this exact prompt with any code generation or developer agent. It is self contained and explicit.
+
+You are an expert senior full stack engineer. I have an existing single page web app. Your task is to rebuild it as a secure, production ready Web3 dApp that uses Base mainnet as the blockchain and supports wallet connections only via Metamask and OKX Wallet. The dApp must allow authenticated users to submit a numeric user score that is written to the Base mainnet in a gas efficient way.
+
+Deliverables
+
+A complete project plan and folder structure.
+
+A full smart contract in Solidity that stores user scores, emits events, and exposes read functions. Include unit tests and deployment scripts. Use Hardhat.
+
+Frontend code using TypeScript and React that: connects to Metamask and OKX Wallet, requests the user to switch to Base mainnet if needed, signs transactions with the connected wallet, shows transaction status, and calls the score submission contract function. Use wagmi and ethers for wallet and provider integration. Include UI components, hooks, and sample pages.
+
+CI scripts for testing and deployment. Include a Hardhat deployment pipeline that can deploy to Base testnet then to Base mainnet with private key and environment variable handling. Include verification steps for block explorer.
+
+Security checklist, gas cost considerations, and recommended production RPC providers.
+
+README and developer runbook with commands to spin up local environment, run tests, simulate transactions, and deploy to Base.
+
+Requirements and constraints
+• Blockchain target: Base mainnet. Use public RPC https://mainnet.base.org for mainnet and https://sepolia.base.org for test. Chain id 8453. Cite official Base docs where appropriate. 
+docs.base.org
++1
+
+• Wallets allowed: Metamask extension and OKX Wallet only. No other wallets or custodial signers. For OKX Wallet use the official OKX injected provider or official OKX connectors for wagmi. For wagmi use the official wagmi library for React. Cite packages or docs used. 
+npm
++2
+npm
++2
+
+• Gas and UX: Score submission must be one signed transaction per submission by default, with an option to batch or compress multiple scores later. Store minimal data on chain, and emit events for indexing.
+• Score model: Accept unsigned integers up to 1,000,000. Record score with address, timestamp, and optional metadata hash. Keep writes cheap. Provide read functions returning latest score and score history pagination.
+• Security: Prevent reentrancy, overflow, and unauthorized writes. Include sane access control for admin actions. Use OpenZeppelin libraries and follow best practices.
+• Tests: Provide unit tests for smart contract logic and integration tests for the submit flow. Mock wallets where needed.
+• Developer ergonomics: Provide a React hook useScoreContract to handle read, submit, gas estimate, and tx status. Provide an example page that shows connect wallet, current chain, submit score input, and transaction log.
+• Dev environment: Node 18 or later, pnpm or npm, Hardhat, TypeScript, React 18+. Use Tailwind CSS for styling. Provide lints and formatters.
+
+Output format
+• Start with a concise architecture summary and tech stack.
+• Provide a step by step development plan with tasks and estimated relative effort per task. Do not give calendar dates.
+• Provide full Solidity contract code and full Hardhat config.
+• Provide full TypeScript frontend files for: connection, contract hook, UI page, and minimal CSS.
+• Provide sample tests.
+• Provide deployment steps for Base testnet and Base mainnet and sample verification commands.
+• End with a production checklist, monitoring suggestions, and a small section on how to migrate user data from the existing app if needed.
+
+If any external package names, RPC endpoints, or connector names are used, include a short reference link or package name to prove the source. Prioritize official packages and docs. If a package is not official, note it as community maintained.
+
+If you cannot do something because of tooling limits, say so and give a safe alternative. Keep output concise but complete. Produce code that can be copied and run.
+
+2 — Recommended tech stack (one small list)
+
+Frontend
+
+React 18 with TypeScript
+
+Next.js or Vite + React depending on SSR needs. Use Next.js if you need server side rendering or API routes.
+
+wagmi for wallet hooks and connectors. Use ethers as underlying provider. 
+wagmi.sh
+
+@okwallet/wagmi-okx-connector or OKX injected provider to support OKX Wallet integration. Note the OKX SDK and official provider docs. 
+npm
++1
+
+Tailwind CSS for styling, shadcn/ui optional components
+
+Backend / devops
+
+Hardhat for smart contract development and scripts
+
+OpenZeppelin Contracts for safe building blocks
+
+Ethers.js for scripts and tests
+
+Node 18+, pnpm or npm
+
+Smart contracts
+
+Solidity 0.8.x, use latest 0.8.x stable for built in overflow checks
+
+OpenZeppelin libraries, events for indexing
+
+Testing and CI
+
+Mocha + Chai or Waffle for unit tests
+
+Hardhat network for local testing
+
+GitHub Actions for CI: run tests, run linters, run typecheck, deploy on tag
+
+RPC and deployment
+
+Base public RPC https://mainnet.base.org for mainnet and https://sepolia.base.org for test. Chain id 8453. 
+docs.base.org
++1
+
+For production, use a paid provider like QuickNode, Alchemy, or Infura alternate endpoints for reliability. Provide fallback RPCs.
+
+Connectors and packages to install
+
+ethers
+
+wagmi
+
+@okwallet/wagmi-okx-connector or official OKX provider packages for integration. 
+npm
++1
+
+hardhat, @nomiclabs/hardhat-ethers
+
+@openzeppelin/contracts
+
+typescript, eslint, prettier
+
+3 — High level architecture and data model
+
+Goal
+
+Keep on chain state minimal. Write only necessary numeric score and essential metadata. Emit an event for indexing by The Graph or an offchain indexer.
+
+Data model on chain
+
+struct ScoreEntry { address user; uint256 score; uint256 timestamp; bytes32 metadataHash; }
+
+mapping(address => ScoreEntry[]) userScores or mapping(address => uint256[]) with an index for timestamps. Use arrays only for read heavy scenarios. If the expected number of entries per user is large, prefer events only and an offchain indexer. Otherwise a capped per user history is fine.
+
+Gas tradeoff
+
+Writing arrays costs gas. A low cost approach store only latest score and emit events for history. I recommend:
+
+Store latest score in mapping(address => ScoreEntry) latestScores
+
+Emit ScoreSubmitted(address indexed user, uint256 score, uint256 timestamp, bytes32 metadataHash) for history. Offchain indexer reconstructs user history. This is cheap and typical.
+
+4 — Example Solidity contract (full)
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+contract ScoreRegistry is Ownable, ReentrancyGuard {
+    struct Score {
+        uint256 value;
+        uint256 timestamp;
+        bytes32 metadataHash;
+    }
+
+    // latest score per address
+    mapping(address => Score) private _latestScore;
+
+    event ScoreSubmitted(address indexed user, uint256 value, uint256 timestamp, bytes32 metadataHash);
+    event AdminCleared(address indexed admin, address indexed user);
+
+    /// @notice submit a new score for msg.sender
+    /// @param value numeric score
+    /// @param metadataHash optional hash for offchain metadata, pass 0 if none
+    function submitScore(uint256 value, bytes32 metadataHash) external nonReentrant {
+        require(value <= 1_000_000, "score: out of range");
+
+        _latestScore[msg.sender] = Score({
+            value: value,
+            timestamp: block.timestamp,
+            metadataHash: metadataHash
+        });
+
+        emit ScoreSubmitted(msg.sender, value, block.timestamp, metadataHash);
+    }
+
+    /// @notice view latest score for a user
+    function latestScoreOf(address user) external view returns (uint256 value, uint256 timestamp, bytes32 metadataHash) {
+        Score memory s = _latestScore[user];
+        return (s.value, s.timestamp, s.metadataHash);
+    }
+
+    /// @notice admin helper to clear stored score for a user. Admin only.
+    function adminClearScore(address user) external onlyOwner {
+        delete _latestScore[user];
+        emit AdminCleared(msg.sender, user);
+    }
+}
+
+
+Notes
+
+This keeps on chain state minimal. It stores only each address latest score. Full history is reconstructed from ScoreSubmitted events. This is gas efficient and simple.
+
+If you need write-once append history on chain, add an indexed mapping of limited entries or use event only approach.
+
+5 — Hardhat config and deployment snippet
+
+Hardhat config (typescript)
+
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomiclabs/hardhat-ethers";
+import "hardhat-deploy";
+
+const config: HardhatUserConfig = {
+  solidity: "0.8.19",
+  networks: {
+    hardhat: {},
+    base: {
+      url: "https://mainnet.base.org",
+      chainId: 8453,
+      // accounts read from env PRIVATE_KEY
+      accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : []
+    },
+    baseSepolia: {
+      url: "https://sepolia.base.org",
+      chainId: 84532,
+      accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : []
+    }
+  },
+  namedAccounts: {
+    deployer: 0
+  }
+};
+
+export default config;
+
+
+Deployment script (hardhat-deploy style)
+
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { DeployFunction } from "hardhat-deploy/types";
+
+const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  const { deployments, getNamedAccounts } = hre;
+  const { deploy } = deployments;
+  const { deployer } = await getNamedAccounts();
+
+  await deploy("ScoreRegistry", {
+    from: deployer,
+    args: [],
+    log: true
+  });
+};
+
+export default func;
+func.tags = ["ScoreRegistry"];
+
+
+Verification
+
+Use npx hardhat verify --network base <DEPLOYED_ADDRESS>
+
+6 — Frontend integration plan and code snippets
+
+Main ideas
+
+Use wagmi to manage wallet state. Use ethers for contract calls. Use connectors for Metamask and OKX. When the user attempts to submit a score, create a write contract call, show a preflight gas estimate, request the user to approve via wallet, and show pending / success / error.
+
+Install
+
+npm install wagmi ethers @okwallet/wagmi-okx-connector
+
+
+Example wagmi client setup
+
+// src/web3/wagmiClient.tsx
+import { createClient, configureChains } from "wagmi";
+import { publicProvider } from "wagmi/providers/public";
+import { jsonRpcProvider } from "wagmi/providers/jsonRpc";
+import { InjectedConnector } from "wagmi/connectors/injected";
+import OkxConnector from "@okwallet/wagmi-okx-connector";
+
+const baseChain = {
+  id: 8453,
+  name: "Base Mainnet",
+  network: "base",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: { default: "https://mainnet.base.org" },
+  blockExplorers: { default: { name: "BaseScan", url: "https://basescan.org" } },
+  testnet: false
+};
+
+const { chains, provider } = configureChains([baseChain], [
+  jsonRpcProvider({ rpc: (chain) => ({ http: chain.rpcUrls.default }) }),
+  publicProvider()
+]);
+
+const client = createClient({
+  autoConnect: true,
+  connectors: [
+    new InjectedConnector({ chains }),
+    new OkxConnector({ chains })
+  ],
+  provider
+});
+
+export default client;
+
+
+Hook to interact with contract
+
+// src/hooks/useScoreContract.ts
+import { useContractWrite, useContractRead, usePrepareContractWrite } from "wagmi";
+import ScoreRegistryAbi from "../abi/ScoreRegistry.json";
+
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_SCORE_REGISTRY_ADDRESS || "";
+
+export function useLatestScoreOf(address: string | undefined) {
+  const { data } = useContractRead({
+    address: CONTRACT_ADDRESS,
+    abi: ScoreRegistryAbi,
+    functionName: "latestScoreOf",
+    args: [address || "0x0000000000000000000000000000000000000000"],
+    watch: true
+  });
+  return data;
+}
+
+export function useSubmitScore() {
+  const { config } = usePrepareContractWrite({
+    address: CONTRACT_ADDRESS,
+    abi: ScoreRegistryAbi,
+    functionName: "submitScore",
+    args: [/* value */, /* metadataHash */]
+  });
+
+  const { writeAsync, isLoading } = useContractWrite(config);
+
+  async function submit(value: number, metadataHash: string = "0x0") {
+    // prepare and call
+    const tx = await writeAsync({ args: [value, metadataHash] });
+    const receipt = await tx.wait();
+    return receipt;
+  }
+
+  return { submit, isLoading };
+}
+
+
+Example UI page
+
+Show connect buttons for Metamask and OKX Wallet provided by wagmi connectors.
+
+On connect, show wallet address and current chain id. If chain id is not 8453, provide a button to prompt chain switch using the wallet provider API. For Metamask this means wallet_addEthereumChain RPC request. For OKX use injected provider instructions. Document both.
+
+Chain switch example for MetaMask
+
+// request to add or switch Base
+await provider.send("wallet_switchEthereumChain", [{ chainId: "0x2105" }]).catch(async (switchError) => {
+  // If the chain has not been added, add it
+  await provider.send("wallet_addEthereumChain", [{
+    chainId: "0x2105",
+    chainName: "Base Mainnet",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    rpcUrls: ["https://mainnet.base.org"],
+    blockExplorerUrls: ["https://basescan.org"]
+  }]);
+});
+
+
+UX patterns
+
+Always show gas estimate and an approve dialog before sending transaction.
+
+Show pending tx with link to basescan or blocks.
+
+After tx confirmation, refresh local cache and show success toast.
+
+7 — Tests
+
+Smart contract unit test example (Hardhat, TypeScript)
+
+import { expect } from "chai";
+import { ethers } from "hardhat";
+
+describe("ScoreRegistry", function () {
+  it("accepts a valid score and emits event", async function () {
+    const [owner, user] = await ethers.getSigners();
+    const ScoreRegistry = await ethers.getContractFactory("ScoreRegistry");
+    const registry = await ScoreRegistry.deploy();
+    await registry.deployed();
+
+    const tx = await registry.connect(user).submitScore(1000, ethers.constants.HashZero);
+    const receipt = await tx.wait();
+
+    const ev = receipt.events?.find(e => e.event === "ScoreSubmitted");
+    expect(ev).to.exist;
+    const [addr, value] = ev?.args!;
+    expect(addr).to.equal(user.address);
+    expect(value.toNumber()).to.equal(1000);
+
+    const latest = await registry.latestScoreOf(user.address);
+    expect(latest.value.toNumber()).to.equal(1000);
+  });
+});
+
+
+Frontend integration test idea
+
+Use Playwright or Cypress and a wallet simulator like Ganache or Hardhat network and a test connector to simulate wallet signing.
+
+8 — Deployment checklist and security
+
+Minimum security checklist
+
+Use OpenZeppelin contracts.
+
+Run static analysis tools like Slither or MythX.
+
+Run hardhat gas reporter.
+
+Lock admin keys in environment variables and hardware wallet where possible.
+
+Set up monitoring for failed txs and suspicious admin calls.
+
+Require multisig for admin operations in production.
+
+Production steps
+
+Deploy to Base Sepolia or local testnet.
+
+Validate contract behavior and event logs.
+
+Upgrade CI to deploy on tag to mainnet with manual approval.
+
+Verify contract on Base explorer.
+
+Release frontend with environment variables pointing to mainnet contract address and RPC provider.
+
+9 — Indexing and history
+
+Because the contract stores only latest score, use events for history. I recommend one of:
+
+The Graph with a small subgraph that listens to ScoreSubmitted and builds history per user.
+
+A simple serverless function that scans logs and stores history in a database for the app UI.
+
+10 — Migration from your existing app
+
+If you have existing scores offchain:
+
+Option A: Migrate by preparing signed transactions from user wallets. That is complex and intrusive. Not recommended.
+
+Option B: Keep legacy scores in your existing DB and show them in UI until the user submits a new onchain score. Provide a mapping indicating source. Provide an offchain signature flow where the user signs a message to attest to ownership then the backend can mint a single onchain record on their behalf if users consent. Note this requires explicit UX and risk acceptance.
+
+11 — Monitoring and observability
+
+Monitor RPC failures, tx reverts, and chain lag.
+
+Create dashboards for pending txs count.
+
+Log events to an offchain indexer.
+
+Use error reporting for both backend and frontend.
+
+12 — Quick references for packages and docs
+
+wagmi docs for React wallet integration. 
+wagmi.sh
+
+OKX wallet connector for wagmi and OKX provider. 
+npm
++1
+
+Base docs and RPC endpoints. Chain id 8453. 
+docs.base.org
++1
+
+13 — Minimal next steps you can hand to a team or AI agent
+
+Create repo with two folders: contracts and webapp.
+
+Scaffold Hardhat in contracts. Add contract ScoreRegistry.sol. Add tests and config above.
+
+Scaffold React + wagmi in webapp. Add wagmi client and connectors. Create useScoreContract hook and example SubmitScore page.
+
+Run test, deploy to Base Sepolia. Manually test submit flow on Sepolia using Metamask and OKX Wallet.
+
+After sign off, deploy to Base mainnet with secure keys and verify contract.
+
+Launch frontend pointing to the mainnet contract address.
