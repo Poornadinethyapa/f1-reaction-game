@@ -154,18 +154,19 @@ Security Features:
 6. **Permanent Record**: Your best score is saved on-chain forever!
 
 ## Recent Changes
-- **2025-10-29**: Web3 Transformation
-  - Created ScoreRegistry.sol smart contract
-  - Configured Hardhat for Base mainnet & testnet
-  - Wrote 18 comprehensive contract tests (all passing)
-  - Built React + TypeScript frontend with Vite
-  - Integrated wagmi for wallet connections
-  - Created useScoreContract hook for blockchain interaction
-  - Rebuilt game UI in React with Tailwind CSS
-  - Added transaction status tracking
-  - Created comprehensive documentation
-  - Set up CI/CD pipeline
-  - Configured deployment for Replit
+- **2025-10-29**: Web3 Transformation ✅ COMPLETE
+  - ✅ Created ScoreRegistry.sol smart contract (18/18 tests passing)
+  - ✅ Configured Hardhat for Base mainnet & testnet
+  - ✅ Built React + TypeScript frontend with Vite
+  - ✅ Integrated wagmi for wallet connections (Metamask & OKX)
+  - ✅ Created useScoreContract hook for blockchain interaction
+  - ✅ Rebuilt game UI in React with Tailwind CSS
+  - ✅ Fixed critical game state bug using useRef pattern
+  - ✅ Added transaction status tracking
+  - ✅ Created comprehensive documentation
+  - ✅ Set up CI/CD pipeline
+  - ✅ Configured Vite for Replit environment (HMR on port 443)
+  - ✅ Frontend dev server running successfully on port 5000
 
 ## Environment Variables
 
@@ -179,6 +180,10 @@ BASESCAN_API_KEY=your_api_key
 ```env
 VITE_SCORE_REGISTRY_ADDRESS=0xYourContractAddress
 ```
+
+## Known Issues & Solutions
+- **Vite Source Maps**: Corrupted source maps from viem packages have been removed. If you encounter source map errors after reinstalling dependencies, run: `find frontend/node_modules -name "*.js.map" -type f -size 1c -delete`
+- **HMR WebSocket**: HMR is configured for Replit's proxy (port 443). Local development works perfectly.
 
 ## Testing
 - **Contract Tests**: 18/18 passing

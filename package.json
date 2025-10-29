@@ -8,5 +8,12 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.5",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "viem": "^2.38.5",
+    "wagmi": "^2.19.1"
+  }
 }
